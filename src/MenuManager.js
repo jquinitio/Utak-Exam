@@ -1,0 +1,293 @@
+import React, { useState, useEffect } from "react";
+import { database, ref, set, update, remove, onValue, push } from "./firebase";
+import { Formik, Form, Field, FieldArray, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { Button, Container, Row, Col, Table } from "react-bootstrap";
+
+const MenuManager = () => {
+  const [items, setItems] = useState([]);
+  const [editingItem, setEditingItem] = useState(null);
+
+  useEffect(() => {
+    const itemsRef = ref(database, "items");
+    onValue(itemsRef, (snapshot) => {
+      const itemsData = snapshot.val();
+      const itemsList = itemsData
+        ? Object.keys(itemsData).map((key) => ({ id: key, ...itemsData[key] }))
+        : [];
+      setItems(itemsList);
+    });
+  }, []);
+
+  const saveItem = (item, resetForm) => {
+    const existingItem = items.find((existing) => existing.name === item.name);
+    if (existingItem && (!item.id || existingItem.id !== item.id)) {
+      alert("Item with this name already exists!");
+      return;
+    }
+
+    if (item.id) {
+      const itemRef = ref(database, `items/${item.id}`);
+      update(itemRef, item);
+    } else {
+      const newItemRef = push(ref(database, "items"));
+      set(newItemRef, { ...item, id: newItemRef.key });
+    }
+    resetForm();
+    setEditingItem(null);
+  };
+
+  const editItem = (item) => {
+    setEditingItem({
+      ...item,
+      options: item.options ? item.options : [],
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingItem(null);
+  };
+
+  const deleteItem = (itemId) => {
+    const itemRef = ref(database, `items/${itemId}`);
+    remove(itemRef);
+  };
+
+  const validationSchema = Yup.object().shape({
+    category: Yup.string().required("Category is required"),
+    name: Yup.string().required("Name is required"),
+    options: Yup.array().of(
+      Yup.object().shape({
+        name: Yup.string().required("Option is required"),
+        price: Yup.number()
+          .positive("Price must be greater than zero")
+          .required("Price is required"),
+        cost: Yup.number()
+          .min(0, "Cost must be zero or more")
+          .required("Cost is required"),
+        stock: Yup.number()
+          .min(0, "Stock must be zero or more")
+          .required("Stock is required"),
+      })
+    ),
+  });
+
+  return (
+    <Container>
+      <h1>Menu Manager</h1>
+      <Formik
+        initialValues={
+          editingItem || {
+            category: "",
+            name: "",
+            options: [],
+            price: "",
+            cost: "",
+            stock: "",
+          }
+        }
+        enableReinitialize
+        validationSchema={validationSchema}
+        onSubmit={(values, { resetForm }) => saveItem(values, resetForm)}
+      >
+        {({ values, errors, touched }) => (
+          <Form>
+            <Row>
+              <Col>
+                Category
+                <Field name="category" className="form-control" />
+                <ErrorMessage
+                  name="category"
+                  component="div"
+                  className="text-danger"
+                />
+              </Col>
+              <Col>
+                Name
+                <Field name="name" className="form-control" />
+                <ErrorMessage
+                  name="name"
+                  component="div"
+                  className="text-danger"
+                />
+              </Col>
+            </Row>
+            <FieldArray name="options">
+              {({ push, remove }) => (
+                <div>
+                  {values.options.length > 0 ? (
+                    values.options.map((option, index) => (
+                      <Row key={index}>
+                        <Col>
+                          Option
+                          <Field
+                            name={`options[${index}].name`}
+                            className="form-control"
+                          />
+                          <ErrorMessage
+                            name={`options[${index}].name`}
+                            component="div"
+                            className="text-danger"
+                          />
+                        </Col>
+                        <Col>
+                          Price
+                          <Field
+                            name={`options[${index}].price`}
+                            className="form-control"
+                          />
+                          <ErrorMessage
+                            name={`options[${index}].price`}
+                            component="div"
+                            className="text-danger"
+                          />
+                        </Col>
+                        <Col>
+                          Cost
+                          <Field
+                            name={`options[${index}].cost`}
+                            className="form-control"
+                          />
+                          <ErrorMessage
+                            name={`options[${index}].cost`}
+                            component="div"
+                            className="text-danger"
+                          />
+                        </Col>
+                        <Col>
+                          Stock
+                          <Field
+                            name={`options[${index}].stock`}
+                            className="form-control"
+                          />
+                          <ErrorMessage
+                            name={`options[${index}].stock`}
+                            component="div"
+                            className="text-danger"
+                          />
+                        </Col>
+                        <Col>
+                          <Button
+                            variant="danger"
+                            onClick={() => remove(index)}
+                          >
+                            Remove
+                          </Button>
+                        </Col>
+                      </Row>
+                    ))
+                  ) : (
+                    <Row>
+                      <Col>
+                        Price
+                        <Field name="price" className="form-control" />
+                        <ErrorMessage
+                          name="price"
+                          component="div"
+                          className="text-danger"
+                        />
+                      </Col>
+                      <Col>
+                        Cost
+                        <Field name="cost" className="form-control" />
+                        <ErrorMessage
+                          name="cost"
+                          component="div"
+                          className="text-danger"
+                        />
+                      </Col>
+                      <Col>
+                        Stock
+                        <Field name="stock" className="form-control" />
+                        <ErrorMessage
+                          name="stock"
+                          component="div"
+                          className="text-danger"
+                        />
+                      </Col>
+                    </Row>
+                  )}
+                  <div style={{ marginTop: "10px" }}>
+                    <Button
+                      onClick={() =>
+                        push({
+                          name: "",
+                          price: values.price || "",
+                          cost: values.cost || "",
+                          stock: values.stock || "",
+                        })
+                      }
+                    >
+                      Add Option
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </FieldArray>
+            <div style={{ marginTop: "20px" }}>
+              <Button type="submit">
+                {editingItem ? "Update" : "Save"} Item
+              </Button>{" "}
+              {editingItem && (
+                <Button variant="secondary" onClick={cancelEdit}>
+                  Cancel
+                </Button>
+              )}
+            </div>
+          </Form>
+        )}
+      </Formik>
+
+      <h2 style={{ marginTop: "20px" }}>Menu Items</h2>
+      <Table striped bordered hover style={{ marginTop: "10px" }}>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Name</th>
+            <th>Options</th>
+            <th>Price</th>
+            <th>Cost</th>
+            <th>Stock</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id}>
+              <td>{item.category}</td>
+              <td>{item.name}</td>
+              <td>
+                {Array.isArray(item.options)
+                  ? item.options.map((option) => option.name).join(", ")
+                  : ""}
+              </td>
+              <td>
+                {Array.isArray(item.options)
+                  ? item.options.map((option) => option.price).join(", ")
+                  : item.price}
+              </td>
+              <td>
+                {Array.isArray(item.options)
+                  ? item.options.map((option) => option.cost).join(", ")
+                  : item.cost}
+              </td>
+              <td>
+                {Array.isArray(item.options)
+                  ? item.options.map((option) => option.stock).join(", ")
+                  : item.stock}
+              </td>
+              <td>
+                <Button onClick={() => editItem(item)}>Edit</Button>
+                <Button variant="danger" onClick={() => deleteItem(item.id)}>
+                  Delete
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </Container>
+  );
+};
+
+export default MenuManager;
