@@ -1,0 +1,23 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "items": {
+      "$itemId": {
+        "category": {},
+        "name": {},
+        "options": {
+          "$optionId": {
+            "name": {},
+            "price": {},
+            "cost": {},
+            "stock": {}
+          }
+        },
+        "price": {},
+        "cost": {},
+        "stock": {}
+      }
+    }
+  }
+}
