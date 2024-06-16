@@ -2,13 +2,22 @@ import React, { useState, useEffect } from "react";
 import { database, ref, set, update, remove, onValue, push } from "./firebase";
 import { Formik, Form, Field, FieldArray, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { Button, Container, Row, Col, Table } from "react-bootstrap";
+import {
+  Button,
+  Container,
+  Row,
+  Col,
+  Table,
+  Form as BootstrapForm,
+} from "react-bootstrap";
 import "./themes.css";
 
 const MenuManager = () => {
   const [items, setItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   useEffect(() => {
     const itemsRef = ref(database, "items");
@@ -77,6 +86,14 @@ const MenuManager = () => {
       })
     ),
   });
+
+  const categories = [...new Set(items.map((item) => item.category))];
+
+  const filteredItems = items.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (selectedCategory ? item.category === selectedCategory : true)
+  );
 
   return (
     <Container className={darkMode ? "container-dark" : "container-light"}>
@@ -305,7 +322,50 @@ const MenuManager = () => {
         )}
       </Formik>
 
-      <h2 style={{ marginTop: "20px" }}>Menu Items</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: "20px",
+        }}
+      >
+        <h2>Menu Items</h2>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <label htmlFor="category-filter" style={{ marginRight: "10px" }}>
+            Filter by Category:
+          </label>
+          <BootstrapForm.Control
+            as="select"
+            id="category-filter"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className={darkMode ? "form-control-dark" : "form-control-light"}
+          >
+            <option value="">All Categories</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </BootstrapForm.Control>
+          <label
+            htmlFor="search-bar"
+            style={{ marginLeft: "20px", marginRight: "10px" }}
+          >
+            Search:
+          </label>
+          <BootstrapForm.Control
+            type="text"
+            id="search-bar"
+            placeholder="Product Name?"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={darkMode ? "form-control-dark" : "form-control-light"}
+          />
+        </div>
+      </div>
+
       <Table
         striped
         bordered
@@ -325,7 +385,7 @@ const MenuManager = () => {
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <tr key={item.id}>
               <td>{item.category}</td>
               <td>{item.name}</td>
