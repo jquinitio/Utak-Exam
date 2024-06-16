@@ -3,10 +3,12 @@ import { database, ref, set, update, remove, onValue, push } from "./firebase";
 import { Formik, Form, Field, FieldArray, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { Button, Container, Row, Col, Table } from "react-bootstrap";
+import "./themes.css";
 
 const MenuManager = () => {
   const [items, setItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     const itemsRef = ref(database, "items");
@@ -18,6 +20,10 @@ const MenuManager = () => {
       setItems(itemsList);
     });
   }, []);
+
+  useEffect(() => {
+    document.body.className = darkMode ? "dark-mode" : "light-mode";
+  }, [darkMode]);
 
   const saveItem = (item, resetForm) => {
     const existingItem = items.find((existing) => existing.name === item.name);
@@ -73,8 +79,22 @@ const MenuManager = () => {
   });
 
   return (
-    <Container>
-      <h1>Menu Manager</h1>
+    <Container className={darkMode ? "container-dark" : "container-light"}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <h1>Menu Manager</h1>
+        <Button
+          onClick={() => setDarkMode(!darkMode)}
+          className={darkMode ? "button-dark" : "button-light"}
+        >
+          Toggle {darkMode ? "Light" : "Dark"} Mode
+        </Button>
+      </div>
       <Formik
         initialValues={
           editingItem || {
@@ -95,7 +115,12 @@ const MenuManager = () => {
             <Row>
               <Col>
                 Category
-                <Field name="category" className="form-control" />
+                <Field
+                  name="category"
+                  className={`form-control ${
+                    darkMode ? "form-control-dark" : "form-control-light"
+                  }`}
+                />
                 <ErrorMessage
                   name="category"
                   component="div"
@@ -104,7 +129,12 @@ const MenuManager = () => {
               </Col>
               <Col>
                 Name
-                <Field name="name" className="form-control" />
+                <Field
+                  name="name"
+                  className={`form-control ${
+                    darkMode ? "form-control-dark" : "form-control-light"
+                  }`}
+                />
                 <ErrorMessage
                   name="name"
                   component="div"
@@ -122,7 +152,11 @@ const MenuManager = () => {
                           Option
                           <Field
                             name={`options[${index}].name`}
-                            className="form-control"
+                            className={`form-control ${
+                              darkMode
+                                ? "form-control-dark"
+                                : "form-control-light"
+                            }`}
                           />
                           <ErrorMessage
                             name={`options[${index}].name`}
@@ -134,7 +168,11 @@ const MenuManager = () => {
                           Price
                           <Field
                             name={`options[${index}].price`}
-                            className="form-control"
+                            className={`form-control ${
+                              darkMode
+                                ? "form-control-dark"
+                                : "form-control-light"
+                            }`}
                           />
                           <ErrorMessage
                             name={`options[${index}].price`}
@@ -146,7 +184,11 @@ const MenuManager = () => {
                           Cost
                           <Field
                             name={`options[${index}].cost`}
-                            className="form-control"
+                            className={`form-control ${
+                              darkMode
+                                ? "form-control-dark"
+                                : "form-control-light"
+                            }`}
                           />
                           <ErrorMessage
                             name={`options[${index}].cost`}
@@ -158,7 +200,11 @@ const MenuManager = () => {
                           Stock
                           <Field
                             name={`options[${index}].stock`}
-                            className="form-control"
+                            className={`form-control ${
+                              darkMode
+                                ? "form-control-dark"
+                                : "form-control-light"
+                            }`}
                           />
                           <ErrorMessage
                             name={`options[${index}].stock`}
@@ -180,7 +226,14 @@ const MenuManager = () => {
                     <Row>
                       <Col>
                         Price
-                        <Field name="price" className="form-control" />
+                        <Field
+                          name="price"
+                          className={`form-control ${
+                            darkMode
+                              ? "form-control-dark"
+                              : "form-control-light"
+                          }`}
+                        />
                         <ErrorMessage
                           name="price"
                           component="div"
@@ -189,7 +242,14 @@ const MenuManager = () => {
                       </Col>
                       <Col>
                         Cost
-                        <Field name="cost" className="form-control" />
+                        <Field
+                          name="cost"
+                          className={`form-control ${
+                            darkMode
+                              ? "form-control-dark"
+                              : "form-control-light"
+                          }`}
+                        />
                         <ErrorMessage
                           name="cost"
                           component="div"
@@ -198,7 +258,14 @@ const MenuManager = () => {
                       </Col>
                       <Col>
                         Stock
-                        <Field name="stock" className="form-control" />
+                        <Field
+                          name="stock"
+                          className={`form-control ${
+                            darkMode
+                              ? "form-control-dark"
+                              : "form-control-light"
+                          }`}
+                        />
                         <ErrorMessage
                           name="stock"
                           component="div"
@@ -239,7 +306,13 @@ const MenuManager = () => {
       </Formik>
 
       <h2 style={{ marginTop: "20px" }}>Menu Items</h2>
-      <Table striped bordered hover style={{ marginTop: "10px" }}>
+      <Table
+        striped
+        bordered
+        hover
+        className={darkMode ? "table-dark" : "table-light"}
+        style={{ marginTop: "10px" }}
+      >
         <thead>
           <tr>
             <th>Category</th>
